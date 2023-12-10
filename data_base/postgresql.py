@@ -8,6 +8,13 @@ from decouple import config
 DB_NAME = config('DB_NAME')
 engine_psql = create_engine(DB_NAME)
 
-SessionLocal = sessionmaker(auto_commit=True,auto_flush=True,bind=engine_psql)
+SessionLocal = sessionmaker(autocommit=False,autoflush=True,bind=engine_psql)
 
 Base = declarative_base()
+
+def get_psql_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
