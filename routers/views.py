@@ -63,7 +63,7 @@ def create_product(product: Product, db: Session = Depends(get_psql_db)):
         db.refresh(new_product)
 
     except Exception as e:
-        print(e, "ssssssssssssssssssssssss")
+       
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST
@@ -71,25 +71,29 @@ def create_product(product: Product, db: Session = Depends(get_psql_db)):
     return {"product": new_product}
 
 
-@routers.post('/buy_product/{id}/{product_id}/{product_price}')
-def buy_product(id:str, product_id:int,product_price:float,affiliate: Affiliate, db:Session=Depends(get_psql_db)):
+@routers.post('/buy_product/{id}/{product_id}')
+def buy_product(id:str, product_id:int,affiliate: Affiliate, db:Session=Depends(get_psql_db)):
     product = db.query(Product_DB).filter(Product_DB.product_id==product_id).first()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='product not found')
     affiliate_check = db.query(Affiliate_DB).filter(Affiliate_DB.id == id).first()
     if not affiliate_check:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='link not found')
+    product_price = product.product_price
     commission_rate = affiliate_check.commission_rate
     commission = product_price * commission_rate
     affiliate_check.commission += commission
     db.commit()
     return {"message": "commission updated successfully"}
 
-@routers.get('get_total_commission/{id}')
-def get_total_commission(id:str,db:Session=Depends(get_psql_db)):
-    affiliate = db.query(Affiliate_DB).filter(Affiliate_DB.id == id ).first()
-    if affiliate is not None:
-        return {"message": affiliate.commission}
+# @routers.get('get_total_commission/{id}')
+# def get_total_commission(id:str,db:Session=Depends(get_psql_db)):
+#     affiliate = db.query(Affiliate_DB).filter(Affiliate_DB.id == id ).first()
+#     print(affiliate)
+#     if affiliate is not None:
+#         print(affiliate.commission)
+#         return {"message": affiliate.commission}
+#     return {"message":"please enter valid id"}
 
     
         
