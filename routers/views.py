@@ -69,19 +69,29 @@ def create_product(product: Product, db: Session = Depends(get_psql_db)):
             status_code=status.HTTP_400_BAD_REQUEST
         )
     return {"product": new_product}
-    
-    # sql_statement = text(
-    #     "INSERT INTO products (name, affiliate_id, product_price) "
-    #     "VALUES (:name, :affiliate_id, :product_price) "
-    #     "RETURNING products.created_at"
-    # )
+
+
+@routers.post('/buy_product/{id}/{product_id}/{product_price}')
+def buy_product(id:str, product_id:int,product_price:float,affiliate: Affiliate, db:Session=Depends(get_psql_db)):
+    product = db.query(Product_DB).filter(Product_DB.product_id==product_id).first()
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='product not found')
+    affiliate_check = db.query(Affiliate_DB).filter(Affiliate_DB.id == id).first()
+    if not affiliate_check:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='link not found')
+    commission_rate = affiliate_check.commission_rate
+    commission = product_price * commission_rate
+    affiliate_check.commission += commission
+    db.commit()
+    return {"message": "commission updated successfully"}
+
+@routers.get('get_total_commission/{id}')
+def get_total_commission(id:str,db:Session=Depends(get_psql_db)):
+    affiliate = db.query(Affiliate_DB).filter(Affiliate_DB.id == id ).first()
+    if affiliate is not None:
+        return {"message": affiliate.commission}
 
     
-    # result = db.execute(sql_statement, {
-    #     'name': product.name,
-    #     'affiliate_id': [str(aff_id) for aff_id in product.affiliate_id],
-    #     'product_price': product.product_price
-    # }).fetchone()
         
    
 
