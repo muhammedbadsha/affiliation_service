@@ -11,10 +11,10 @@ from sqlalchemy.orm import relationship
 class Product_DB(Base):
     __tablename__ = 'products'
     __allow_unmapped__ = True
-    product_id :int = Column(Integer, primary_key=True,autoincrement=True)
+    product_id = Column(Integer, primary_key=True, index=True,autoincrement=True)
     name : str = Column(String)
-    affiliate_id :List[UUID] = Column(UUID(as_uuid=True), ForeignKey("affiliated.id"))    
+    affiliate_id :uuid.UUID = Column(UUID(as_uuid=True), ForeignKey("affiliated.id"))    
     product_price :float= Column(Float)
-    created_at  =  Column(DateTime(timezone=True), server_default=func.now())
+    created_at: DateTime = Column(DateTime(timezone=True), server_default=func.now())
     
     affiliate = relationship("Affiliate_DB", back_populates="products")

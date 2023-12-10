@@ -11,7 +11,7 @@ from sqlalchemy.orm import relationship
 
 class Affiliate_DB(Base):
     __tablename__ = 'affiliated'
-    id :str = Column(String, primary_key=True, default=str(uuid.uuid1()), index=True)
+    id :uuid.UUID = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid1(), index=True)
     name  :str = Column(String)
     commission_rate :float = Column(Float)
     commission:float = Column(Float, default=0.0)

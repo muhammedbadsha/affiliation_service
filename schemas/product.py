@@ -6,9 +6,8 @@ from typing import List
 
 class Product(BaseModel):
     name : str
-
     product_price:float
-    affiliate_id: List[UUID1]
+    affiliate_id: UUID1
 
     class Config:
         orm_mode = True

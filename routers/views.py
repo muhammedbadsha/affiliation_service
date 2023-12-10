@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from data_base.postgresql import Base, engine_psql, get_psql_db
 from sqlalchemy.orm import Session
 from schemas.affiliate import Affiliate
 from schemas.product import Product
 from models.affiliate import Affiliate_DB
 from models.Product import Product_DB
-from sqlalchemy import text
+from sqlalchemy import text,or_
+from typing import Generator
 import uuid 
+
 
 from fastapi.responses import JSONResponse
 
@@ -45,30 +47,42 @@ def get_all_affiliate(db: Session = Depends(get_psql_db)):
     return {"error": "could not have any Affiliate"}
 
 
+ 
 @routers.post("/create_product", status_code=status.HTTP_201_CREATED)
 def create_product(product: Product, db: Session = Depends(get_psql_db)):
-    print("Product created")
-    print(f"Received Product: {product.dict()}")
-    product_id = uuid.UUID(hex=uuid.uuid4().hex)
     
     new_product = Product_DB(
-        name=product.name,
-        product_price=product.product_price,
-        affiliate_id=product.affiliate_id,
+        name = product.name,
+        affiliate_id = product.affiliate_id,
+        product_price = product.product_price,
     )
+    try:
+
+        db.add(new_product)
+        db.commit()
+        db.refresh(new_product)
+
+    except Exception as e:
+        print(e, "ssssssssssssssssssssssss")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+    return {"product": new_product}
     
-    sql_statement = text(
-        "INSERT INTO products (name, affiliate_id, product_price) "
-        "VALUES (:name, :affiliate_id, :product_price) "
-        # "RETURNING products.created_at"
-    )
+    # sql_statement = text(
+    #     "INSERT INTO products (name, affiliate_id, product_price) "
+    #     "VALUES (:name, :affiliate_id, :product_price) "
+    #     "RETURNING products.created_at"
+    # )
+
     
-    result = db.execute(sql_statement, {
-        'name': product.name,
-        'affiliate_id': [str(aff_id) for aff_id in product.affiliate_id],
-        'product_price': product.product_price
-    }).fetchone()
-    
-    db.commit()
-    db.refresh(new_product)
-    return {"product": result}
+    # result = db.execute(sql_statement, {
+    #     'name': product.name,
+    #     'affiliate_id': [str(aff_id) for aff_id in product.affiliate_id],
+    #     'product_price': product.product_price
+    # }).fetchone()
+        
+   
+
+
